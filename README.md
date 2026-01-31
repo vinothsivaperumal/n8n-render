@@ -2,6 +2,8 @@
 
 A modern, full-stack Applicant Tracking System built with Next.js, TypeScript, GraphQL, and PostgreSQL.
 
+> **🔒 Security Update**: Updated to Next.js 15.2.9 to address multiple critical security vulnerabilities (Jan 2026). See [SECURITY_ADVISORY.md](SECURITY_ADVISORY.md) for details.
+
 ## 📋 Project Structure
 
 This is a monorepo managed with PNPM workspaces:
@@ -172,7 +174,7 @@ pnpm db:studio
 
 ### Frontend (apps/web)
 
-- **Next.js 14** - React framework with App Router
+- **Next.js 15.2.9** - React framework with App Router (security patched)
 - **TypeScript** - Type-safe development
 - **Apollo Client** - GraphQL client
 - **Tailwind CSS** - Utility-first CSS (configured via globals.css)

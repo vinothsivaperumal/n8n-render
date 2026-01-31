@@ -13,7 +13,7 @@
     "@apollo/client": "^3.9.4",
     "@narpavi-ats/shared": "workspace:*",
     "graphql": "^16.8.1",
-    "next": "14.1.0",
+    "next": "15.2.9",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -22,7 +22,7 @@
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "eslint": "^8.56.0",
-    "eslint-config-next": "14.1.0",
+    "eslint-config-next": "15.2.9",
     "typescript": "^5.3.3"
   }
 }
