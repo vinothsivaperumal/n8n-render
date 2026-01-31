@@ -1,6 +1,8 @@
 import { Context, AuthContext, UserRole } from '../types/context';
 import { AuthenticationError, AuthorizationError } from '../utils/errors';
 
+export { UserRole } from '../types/context';
+
 export const requireAuth = (context: Context): AuthContext => {
   if (!context.user) {
     throw new AuthenticationError('You must be logged in to perform this action');
