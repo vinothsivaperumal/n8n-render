@@ -13,6 +13,9 @@
     "db:push": "prisma db push",
     "db:reset": "prisma migrate reset"
   },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "dependencies": {
     "@prisma/client": "^5.8.1"
   },

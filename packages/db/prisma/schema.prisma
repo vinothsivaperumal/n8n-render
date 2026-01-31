@@ -1,5 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Comprehensive Staffing ATS Schema
+// Prisma Schema for Applicant Tracking System with RTR, Contracts, and Compliance
 
 generator client {
   provider = "prisma-client-js"
@@ -11,75 +11,595 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  role      Role     @default(USER)
+// ========================================
+// CANDIDATE MANAGEMENT
+// ========================================
+
+model Candidate {
+  id          String    @id @default(uuid())
+  firstName   String
+  lastName    String
+  email       String    @unique
+  phone       String?
+  location    String?
+  linkedIn    String?
+  portfolio   String?
+  yearsOfExp  Int?
+  currentRole String?
+  visaStatus  VisaStatus?
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  
+  resumeVersions ResumeVersion[]
+  candidateSkills CandidateSkill[]
+  applications Application[]
+  rtrs RightToRepresent[]
+  contracts Contract[]
+  documents Document[]
+  
+  @@index([email])
+  @@index([firstName, lastName])
+  @@index([phone])
+  @@index([deletedAt])
+  @@map("candidates")
+}
+
+model ResumeVersion {
+  id          String   @id @default(uuid())
+  candidateId String
+  version     Int
+  fileUrl     String
+  fileName    String
+  summary     String?
+  isActive    Boolean  @default(false)
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
-  applications Application[]
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   
-  @@map("users")
+  @@unique([candidateId, version])
+  @@index([candidateId, isActive])
+  @@map("resume_versions")
+}
+
+model Skill {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  category    String?
+  description String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  candidateSkills CandidateSkill[]
+  jobSkills JobSkill[]
+  
+  @@index([name])
+  @@index([category])
+  @@map("skills")
+}
+
+model CandidateSkill {
+  id          String   @id @default(uuid())
+  candidateId String
+  skillId     String
+  yearsOfExp  Float?
+  proficiency SkillLevel @default(INTERMEDIATE)
+  
+  createdAt DateTime @default(now())
+  
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  skill     Skill     @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  
+  @@unique([candidateId, skillId])
+  @@map("candidate_skills")
+}
+
+// ========================================
+// VENDOR MANAGEMENT
+// ========================================
+
+model Vendor {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  companyName String
+  email       String   @unique
+  phone       String?
+  website     String?
+  address     String?
+  taxId       String?
+  status      VendorStatus @default(ACTIVE)
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  
+  contacts VendorContact[]
+  applications Application[]
+  contracts Contract[]
+  documents Document[]
+  
+  @@index([name])
+  @@index([status])
+  @@index([deletedAt])
+  @@map("vendors")
+}
+
+model VendorContact {
+  id          String   @id @default(uuid())
+  vendorId    String
+  firstName   String
+  lastName    String
+  email       String
+  phone       String?
+  role        String?
+  isPrimary   Boolean  @default(false)
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  
+  @@unique([vendorId, email])
+  @@index([vendorId, isPrimary])
+  @@map("vendor_contacts")
+}
+
+// ========================================
+// CLIENT & JOB MANAGEMENT
+// ========================================
+
+model Client {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  industry    String?
+  website     String?
+  address     String?
+  contactName String?
+  contactEmail String?
+  contactPhone String?
+  status      ClientStatus @default(ACTIVE)
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  
+  jobs Job[]
+  documents Document[]
+  
+  @@index([name])
+  @@index([status])
+  @@index([deletedAt])
+  @@map("clients")
 }
 
 model Job {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  department  String
-  location    String
-  type        JobType  @default(FULL_TIME)
-  status      JobStatus @default(OPEN)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(uuid())
+  clientId        String
+  title           String
+  description     String
+  location        String
+  employmentType  EmploymentType @default(FULL_TIME)
+  duration        String?
+  minSalary       Float?
+  maxSalary       Float?
+  billRate        Float?
+  status          JobStatus @default(OPEN)
+  openings        Int      @default(1)
+  priority        JobPriority @default(MEDIUM)
+  startDate       DateTime?
+  endDate         DateTime?
   
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  
+  jobSkills JobSkill[]
   applications Application[]
   
+  @@index([title])
+  @@index([clientId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([deletedAt])
   @@map("jobs")
 }
 
+model JobSkill {
+  id         String   @id @default(uuid())
+  jobId      String
+  skillId    String
+  required   Boolean  @default(true)
+  minYears   Float?
+  
+  createdAt DateTime @default(now())
+  
+  job   Job   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  
+  @@unique([jobId, skillId])
+  @@map("job_skills")
+}
+
+// ========================================
+// APPLICATION & SUBMISSION TRACKING
+// ========================================
+
 model Application {
-  id           String            @id @default(cuid())
-  userId       String
-  jobId        String
-  status       ApplicationStatus @default(PENDING)
-  coverLetter  String?
-  resumeUrl    String?
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
+  id                    String   @id @default(uuid())
+  candidateId           String
+  jobId                 String
+  vendorId              String?
+  rtrId                 String?
   
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  currentStage          ApplicationStage @default(SUBMITTED)
+  status                ApplicationStatus @default(ACTIVE)
   
-  @@unique([userId, jobId])
+  submittedAt           DateTime  @default(now())
+  clientSubmittedAt     DateTime?
+  interviewScheduledAt  DateTime?
+  offerExtendedAt       DateTime?
+  offerAcceptedAt       DateTime?
+  startDate             DateTime?
+  endDate               DateTime?
+  
+  // Prevent duplicate submissions
+  duplicateCheckDate    DateTime  @default(now())
+  
+  notes                 String?
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  job       Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  vendor    Vendor?   @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  rtr       RightToRepresent? @relation(fields: [rtrId], references: [id], onDelete: SetNull)
+  
+  stageHistory StageHistory[]
+  contract     Contract?
+  
+  // Prevent duplicate: same candidate + client + job within configurable window
+  @@unique([candidateId, jobId, duplicateCheckDate])
+  @@index([candidateId])
+  @@index([jobId])
+  @@index([vendorId])
+  @@index([currentStage])
+  @@index([status])
+  @@index([submittedAt])
+  @@index([deletedAt])
   @@map("applications")
 }
 
-enum Role {
-  USER
-  ADMIN
-  RECRUITER
+model StageHistory {
+  id            String   @id @default(uuid())
+  applicationId String
+  stage         ApplicationStage
+  status        ApplicationStatus
+  notes         String?
+  changedBy     String?
+  
+  createdAt DateTime @default(now())
+  
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  
+  @@index([applicationId])
+  @@index([stage])
+  @@index([createdAt])
+  @@map("stage_history")
 }
 
-enum JobType {
+// ========================================
+// RTR (RIGHT TO REPRESENT)
+// ========================================
+
+model RightToRepresent {
+  id              String   @id @default(uuid())
+  candidateId     String
+  vendorId        String?
+  clientId        String?
+  
+  validFrom       DateTime
+  validUntil      DateTime
+  
+  signedByCandidateAt DateTime?
+  candidateSignature  String?
+  candidateIpAddress  String?
+  
+  signedByVendorAt    DateTime?
+  vendorSignature     String?
+  vendorIpAddress     String?
+  
+  status          RTRStatus @default(PENDING)
+  documentUrl     String?
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  
+  applications Application[]
+  
+  @@index([candidateId])
+  @@index([status])
+  @@index([validFrom, validUntil])
+  @@index([deletedAt])
+  @@map("right_to_represent")
+}
+
+// ========================================
+// CONTRACT & RATE MANAGEMENT
+// ========================================
+
+model Contract {
+  id            String   @id @default(uuid())
+  applicationId String   @unique
+  candidateId   String
+  vendorId      String?
+  
+  contractType  ContractType
+  startDate     DateTime
+  endDate       DateTime?
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  candidate   Candidate   @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  vendor      Vendor?     @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  
+  rates Rate[]
+  
+  @@index([candidateId])
+  @@index([vendorId])
+  @@index([contractType])
+  @@index([startDate, endDate])
+  @@map("contracts")
+}
+
+model Rate {
+  id          String   @id @default(uuid())
+  contractId  String
+  
+  // Rate details
+  candidateRate Float  // What candidate gets paid (hourly or salary)
+  billRate      Float  // What client pays (hourly)
+  payType       PayType @default(HOURLY)
+  
+  // Margin calculation
+  margin        Float?  // billRate - candidateRate (for hourly)
+  marginPercent Float?  // (margin / billRate) * 100
+  
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  
+  notes         String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  
+  @@index([contractId])
+  @@index([effectiveFrom, effectiveTo])
+  @@map("rates")
+}
+
+// ========================================
+// DOCUMENT MANAGEMENT
+// ========================================
+
+model Document {
+  id          String   @id @default(uuid())
+  
+  // Polymorphic relations
+  candidateId String?
+  vendorId    String?
+  clientId    String?
+  
+  documentType DocumentType
+  fileName     String
+  fileUrl      String
+  fileSize     Int?
+  mimeType     String?
+  
+  description  String?
+  expiryDate   DateTime?
+  
+  uploadedBy   String?
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  
+  candidate Candidate? @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  vendor    Vendor?    @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  client    Client?    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  
+  @@index([candidateId])
+  @@index([vendorId])
+  @@index([clientId])
+  @@index([documentType])
+  @@index([expiryDate])
+  @@map("documents")
+}
+
+// ========================================
+// AUDIT LOG
+// ========================================
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  
+  entityType  String   // e.g., "Candidate", "Application", "Contract"
+  entityId    String   // UUID of the entity
+  action      AuditAction
+  
+  changedBy   String?  // User ID or system identifier
+  ipAddress   String?
+  userAgent   String?
+  
+  oldValues   Json?    // Previous state
+  newValues   Json?    // New state
+  changes     Json?    // Diff of changes
+  
+  metadata    Json?    // Additional context
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([entityType, entityId])
+  @@index([action])
+  @@index([changedBy])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ========================================
+// ENUMS
+// ========================================
+
+enum VisaStatus {
+  US_CITIZEN
+  GREEN_CARD
+  H1B
+  H4_EAD
+  L2_EAD
+  OPT
+  CPT
+  TN
+  GC_EAD
+  OTHER
+}
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum VendorStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING_APPROVAL
+}
+
+enum ClientStatus {
+  ACTIVE
+  INACTIVE
+  PROSPECT
+  SUSPENDED
+}
+
+enum EmploymentType {
   FULL_TIME
   PART_TIME
   CONTRACT
+  CONTRACT_TO_HIRE
+  TEMPORARY
   INTERNSHIP
 }
 
 enum JobStatus {
-  OPEN
-  CLOSED
   DRAFT
+  OPEN
+  ON_HOLD
+  FILLED
+  CLOSED
+  CANCELLED
+}
+
+enum JobPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ApplicationStage {
+  SUBMITTED
+  SCREENING
+  CLIENT_SUBMITTED
+  INTERVIEW_SCHEDULED
+  INTERVIEWING
+  TECHNICAL_ROUND
+  FINAL_ROUND
+  OFFER_EXTENDED
+  OFFER_ACCEPTED
+  OFFER_DECLINED
+  ONBOARDING
+  PLACED
+  REJECTED
+  WITHDRAWN
 }
 
 enum ApplicationStatus {
+  ACTIVE
+  ON_HOLD
+  CLOSED
+  WITHDRAWN
+}
+
+enum RTRStatus {
   PENDING
-  REVIEWING
-  INTERVIEW
-  REJECTED
-  ACCEPTED
+  SIGNED
+  EXPIRED
+  REVOKED
+}
+
+enum ContractType {
+  C2C
+  W2
+  CORP_TO_CORP
+  INDEPENDENT_CONTRACTOR
+}
+
+enum PayType {
+  HOURLY
+  DAILY
+  WEEKLY
+  MONTHLY
+  ANNUAL
+}
+
+enum DocumentType {
+  RESUME
+  VISA_DOCUMENT
+  ID_PROOF
+  PASSPORT
+  DRIVERS_LICENSE
+  RTR_SIGNED
+  MSA
+  NDA
+  SOW
+  OFFER_LETTER
+  CONTRACT
+  BACKGROUND_CHECK
+  DRUG_TEST
+  CERTIFICATE
+  OTHER
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  SOFT_DELETE
+  RESTORE
+  LOGIN
+  LOGOUT
+  EXPORT
+  IMPORT
+  APPROVE
+  REJECT
 }
