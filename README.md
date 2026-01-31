@@ -104,6 +104,7 @@ pnpm dev
 ```
 
 This will start:
+
 - **Web App** on http://localhost:3000
 - **API Server** on http://localhost:4000/graphql
 
@@ -170,12 +171,14 @@ pnpm db:studio
 ## 🔧 Technology Stack
 
 ### Frontend (apps/web)
+
 - **Next.js 14** - React framework with App Router
 - **TypeScript** - Type-safe development
 - **Apollo Client** - GraphQL client
 - **Tailwind CSS** - Utility-first CSS (configured via globals.css)
 
 ### Backend (apps/api)
+
 - **Node.js** - JavaScript runtime
 - **TypeScript** - Type-safe development
 - **Apollo Server** - GraphQL server
@@ -183,10 +186,12 @@ pnpm db:studio
 - **Prisma** - Database ORM
 
 ### Database (packages/db)
+
 - **PostgreSQL** - Relational database
 - **Prisma** - Database toolkit and ORM
 
 ### Shared (packages/shared)
+
 - Common TypeScript types
 - Utility functions
 - Shared business logic
@@ -212,6 +217,7 @@ pnpm format
 ### Git Hooks
 
 This project uses Husky and lint-staged to run checks before commits:
+
 - Prettier formatting
 - ESLint checks
 - TypeScript type checking
@@ -225,11 +231,13 @@ Hooks are automatically installed after `pnpm install`.
 #### Deploy Web App to Vercel
 
 1. Install Vercel CLI:
+
    ```bash
    npm i -g vercel
    ```
 
 2. Deploy from `apps/web`:
+
    ```bash
    cd apps/web
    vercel
@@ -260,7 +268,7 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - NEXT_PUBLIC_GRAPHQL_URL=http://api:4000/graphql
 
@@ -269,7 +277,7 @@ services:
       context: .
       dockerfile: apps/api/Dockerfile
     ports:
-      - "4000:4000"
+      - '4000:4000'
     environment:
       - DATABASE_URL=postgresql://postgres:password@db:5432/narpavi_ats
     depends_on:

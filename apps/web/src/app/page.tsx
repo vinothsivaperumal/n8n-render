@@ -4,6 +4,17 @@ import { useQuery } from '@apollo/client';
 import { GET_JOBS } from '@/graphql/queries';
 import { formatDate } from '@narpavi-ats/shared';
 
+interface Job {
+  id: string;
+  title: string;
+  description: string;
+  department: string;
+  location: string;
+  type: string;
+  status: string;
+  createdAt: string;
+}
+
 export default function Home() {
   const { data, loading, error } = useQuery(GET_JOBS);
 
@@ -23,8 +34,11 @@ export default function Home() {
 
           {data?.jobs && (
             <div className="grid gap-4">
-              {data.jobs.map((job: any) => (
-                <div key={job.id} className="border p-6 rounded-lg shadow-sm hover:shadow-md transition">
+              {data.jobs.map((job: Job) => (
+                <div
+                  key={job.id}
+                  className="border p-6 rounded-lg shadow-sm hover:shadow-md transition"
+                >
                   <h3 className="text-xl font-semibold mb-2">{job.title}</h3>
                   <p className="text-gray-600 mb-2">{job.description}</p>
                   <div className="flex gap-4 text-sm text-gray-500">
@@ -32,9 +46,7 @@ export default function Home() {
                     <span>🏢 {job.department}</span>
                     <span>💼 {job.type.replace('_', ' ')}</span>
                   </div>
-                  <p className="text-xs text-gray-400 mt-2">
-                    Posted: {formatDate(job.createdAt)}
-                  </p>
+                  <p className="text-xs text-gray-400 mt-2">Posted: {formatDate(job.createdAt)}</p>
                 </div>
               ))}
             </div>

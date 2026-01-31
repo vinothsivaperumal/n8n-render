@@ -1,6 +1,10 @@
 'use client';
 
-import { ApolloClient, InMemoryCache, ApolloProvider as ApolloClientProvider } from '@apollo/client';
+import {
+  ApolloClient,
+  InMemoryCache,
+  ApolloProvider as ApolloClientProvider,
+} from '@apollo/client';
 import { ReactNode } from 'react';
 
 const client = new ApolloClient({
